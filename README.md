@@ -7,7 +7,7 @@ Raw data is extracted from a PostgreSQL source, orchestrated using Dockerized Ap
 
 The focus of this project is scalability, data quality, and production-ready orchestration.
 
-![Alt text](data/AWS.png)
+![Alt text](data\Aws.png)
 
 
 🔄 Data Flow
