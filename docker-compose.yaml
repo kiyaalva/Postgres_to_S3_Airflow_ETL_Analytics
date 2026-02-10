@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - postgres-db-volume:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  airflow-init:
+    build: .
+    image: my-airflow:2.9.2-providers
+    depends_on: [postgres]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__FERNET_KEY: "GkURO8xY4la-4TNtDcx3iobGrmf6c0srUvmVqI0my0U="
+      AIRFLOW__WEBSERVER__SECRET_KEY: "CHANGE_THIS_TO_A_RANDOM_LONG_STRING"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+    entrypoint: /bin/bash
+    command:
+      - -lc
+      - |
+        airflow db migrate && \
+        airflow users create -r Admin -u admin -p admin -e admin@example.com -f Admin -l User || true
+
+  webserver:
+    build: .
+    image: my-airflow:2.9.2-providers
+    depends_on: [postgres]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__FERNET_KEY: "GkURO8xY4la-4TNtDcx3iobGrmf6c0srUvmVqI0my0U="
+      AIRFLOW__WEBSERVER__SECRET_KEY: "CHANGE_THIS_TO_A_RANDOM_LONG_STRING"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+    ports:
+      - "8081:8080"
+    command: webserver
+
+  scheduler:
+    build: .
+    image: my-airflow:2.9.2-providers
+    depends_on: [postgres]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "False"
+      AIRFLOW__CORE__FERNET_KEY: "GkURO8xY4la-4TNtDcx3iobGrmf6c0srUvmVqI0my0U="
+      AIRFLOW__WEBSERVER__SECRET_KEY: "CHANGE_THIS_TO_A_RANDOM_LONG_STRING"
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: "postgresql+psycopg2://airflow:airflow@postgres:5432/airflow"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./plugins:/opt/airflow/plugins
+      - ./logs:/opt/airflow/logs
+      - ./data:/opt/airflow/data
+    command: scheduler
+
+volumes:
+  postgres-db-volume:
